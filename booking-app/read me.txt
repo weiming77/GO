@@ -1,0 +1,7 @@
+cd booking-app directory
+
+Run commands:
+go run main.go datavars.go utils.go 
+or 
+go run .
+or
