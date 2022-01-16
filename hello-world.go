@@ -4,7 +4,8 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	greetings "prj/mod/greetings"
+
+	greetings "github.com/weiming77/hello-world/greeting"
 )
 
 func main() {
@@ -83,7 +84,7 @@ func main() {
 
 	firstName := ""
 	lastName := ""
-	fmt.Printf("Confirm your first name, last name: ")
+	fmt.Printf("\nConfirm your first name, last name: ")
 	fmt.Scan(&firstName, &lastName)
 
 	// if {} else if {} else {}
@@ -91,7 +92,7 @@ func main() {
 		score += 1
 	}
 
-	// fmt.Println(greetings.Hello(firstName + " " + lastName))
+	fmt.Println(greetings.Hello(firstName + " " + lastName))
 
 	total++
 	var i uint
