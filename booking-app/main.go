@@ -64,9 +64,10 @@ func main() {
 			fmt.Println("Tickets sold out!")
 			utils.PrintBookingList(global.Bookings)
 			// Exit end of program
-			return
+			break
 		}
 	}
 	// sync.Wait(): Block until the WaitGroup counter is 0
 	global.WG.Wait()
+	return
 }
