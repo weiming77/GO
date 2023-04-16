@@ -14,7 +14,7 @@ func GoodBye(l *log.Logger) *IGoodBye {
 }
 
 // add the interface
-func (g *IGoodBye) ServerHTTP(w http.ResponseWriter, r *http.Request) {
+func (g *IGoodBye) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	g.l.Println("goodbye handler function...")
 	w.Write([]byte("Good Bye and see ya"))
 }

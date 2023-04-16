@@ -22,7 +22,7 @@ func Hello(l *log.Logger) *IHello {
 
 // add the interface that satisfies the HTTP handler interface
 // PS: r is reference to an HTTP.Request
-func (h *IHello) ServerHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *IHello) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	// here is what need to sactisfy the HTTP handler Interface
 	h.l.Println("Hello handler function...")
 	d, err := ioutil.ReadAll(r.Body)

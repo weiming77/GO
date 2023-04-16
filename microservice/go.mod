@@ -1,3 +1,3 @@
-module github.com/weiming77/GO/tree/master/microservice
+module microservice
 
 go 1.17
