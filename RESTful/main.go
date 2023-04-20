@@ -11,6 +11,9 @@ import (
 	"github.com/weiming77/GO/RESTful/handlers"
 )
 
+// Get the Bind address for the server from Environment variable
+var bindAddress = os.Getenv("BIND_ADDRESS")
+
 func main() {
 	l := log.New(os.Stdout, "products-api ", log.LstdFlags)
 
@@ -19,8 +22,11 @@ func main() {
 	sm := http.NewServeMux()
 	sm.Handle("/", ph)
 
+	if len(bindAddress) == 0 {
+		bindAddress = ":9090"
+	}
 	s := http.Server{
-		Addr:         ":9090",
+		Addr:         bindAddress,
 		Handler:      sm,
 		ErrorLog:     l,
 		ReadTimeout:  5 * time.Second,
