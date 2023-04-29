@@ -104,8 +104,8 @@ func (p *Products) updateProducts(id int, rw http.ResponseWriter, r *http.Reques
 	if err == data.ErrProductNotFound {
 		http.Error(rw, "Product Not Found", http.StatusNotFound)
 		return
-	} else if err == nil {
-		http.Error(rw, "Product Not Found", http.StatusInternalServerError)
+	} else if err != nil {
+		http.Error(rw, "Unknown error", http.StatusInternalServerError)
 		return
 	}
 
