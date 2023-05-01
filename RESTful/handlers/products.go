@@ -100,6 +100,7 @@ func (p *Products) updateProducts(id int, rw http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	p.l.Printf("Prod: %#v", prod)
 	err = data.UpdateProduct(id, prod)
 	if err == data.ErrProductNotFound {
 		http.Error(rw, "Product Not Found", http.StatusNotFound)
@@ -108,7 +109,4 @@ func (p *Products) updateProducts(id int, rw http.ResponseWriter, r *http.Reques
 		http.Error(rw, "Unknown error", http.StatusInternalServerError)
 		return
 	}
-
-	p.l.Printf("Prod: %#v", prod)
-	data.UpdateProduct(id, prod)
 }
