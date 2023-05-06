@@ -30,7 +30,7 @@ type TemperatureEvent struct {
 // A Thermostat measures and controls the temperature
 // PS: value is not exported
 type Thermostat struct {
-	ID    string
+	id    string
 	value float64
 }
 
@@ -44,9 +44,39 @@ func (t *Thermostat) Set(value float64) {
 	t.value = value
 }
 
+func (t *Thermostat) ID() string {
+	return t.id
+}
+
 // kind returns the device kind
 func (*Thermostat) Kind() string {
 	return "Thermostat"
+}
+
+// Camera is a security camera
+type Camera struct {
+	id string
+}
+
+// ID return the camera ID
+func (c *Camera) ID() string {
+	return c.id
+}
+
+func (*Camera) Kind() string {
+	return "Camera"
+}
+
+// Interface in GO are small and defined at the point of using them
+type Sensor interface {
+	ID() string
+	Kind() string
+}
+
+func printAll(sensor []Sensor) {
+	for _, s := range sensor {
+		fmt.Printf("%s <%s>\n", s.ID(), s.Kind())
+	}
 }
 
 func NewDoorEvent(id string, time time.Time, action string) (*DoorEvent, error) {
@@ -75,5 +105,10 @@ func main() {
 	fmt.Printf("%s before: %.2f\n", t.ID, t.Value())
 
 	t.Set(18)
-	fmt.Printf("%s before: %.2f\n", t.ID, t.Value())
+	fmt.Printf("%s after: %.2f\n", t.ID, t.Value())
+
+	c := Camera{"Baby room"}
+
+	sensors := []Sensor{&t, &c}
+	printAll(sensors)
 }
