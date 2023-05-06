@@ -27,6 +27,28 @@ type TemperatureEvent struct {
 	Value float64
 }
 
+// A Thermostat measures and controls the temperature
+// PS: value is not exported
+type Thermostat struct {
+	ID    string
+	value float64
+}
+
+// value return the current temperature in Celsius
+func (t *Thermostat) Value() float64 {
+	return t.value
+}
+
+// set tells the thermostat to set the temperature
+func (t *Thermostat) Set(value float64) {
+	t.value = value
+}
+
+// kind returns the device kind
+func (*Thermostat) Kind() string {
+	return "Thermostat"
+}
+
 func NewDoorEvent(id string, time time.Time, action string) (*DoorEvent, error) {
 	if id == "" {
 		return nil, fmt.Errorf("empty ID")
@@ -48,4 +70,10 @@ func main() {
 
 	fmt.Printf("%+v\n", evt)
 
+	// test Go methods
+	t := Thermostat{"Living Room", 16.2}
+	fmt.Printf("%s before: %.2f\n", t.ID, t.Value())
+
+	t.Set(18)
+	fmt.Printf("%s before: %.2f\n", t.ID, t.Value())
 }
