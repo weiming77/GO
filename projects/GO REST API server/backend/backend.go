@@ -14,17 +14,28 @@ import (
 const DBFILE = "../db/movies.db"
 
 type App struct {
-	DB   *sql.DB
-	Port string
+	DB     *sql.DB
+	Port   string
+	Router *mux.Router
 }
 
 func (a *App) Initialize() {
-	var err error
-	a.DB, err = sql.Open("sqlite3", DBFILE)
+	DB, err := sql.Open("sqlite3", DBFILE)
 
 	if err != nil {
 		log.Fatal(err.Error())
 	}
+
+	a.DB = DB
+
+	// Ideally we want differert API methods handled by different GO methods.
+	// In other words we want different request handlers for one model ie products, orders
+	// to accomplish this, we would use a router. a router keep track of what code to execute (controller) based on the API endpoint and method called.
+	// I like to use router for better code layout, as I can group together API handlers base on the resource (model) they affect
+	// use router so http server response according to the APIs method used.
+	a.Router = mux.NewRouter()
+	a.InitializeRouters()
+
 }
 
 type Movie struct {
@@ -64,30 +75,25 @@ func deleteRequest(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "This is a DELETE")
 }
 
-func (a *App) Run() {
+func (a *App) InitializeRouters() {
 
 	// APPSERVER is returning "hello world" when request match the end point in regardless of different REST methods
 	//http.HandleFunc("/", helloWorld)
-
-	// Ideally we want differert API methods handled by different GO methods.
-	// In other words we want different request handlers for one model ie products, orders
-	// to accomplish this, we would use a router. a router keep track of what code to execute (controller) based on the API endpoint and method called.
-	// I like to use router for better code layout, as I can group together API handlers base on the resource (model) they affect
-	// use router so http server response according to the APIs method used.
-	r := mux.NewRouter()
 	// curl -i http://localhost:3030
-	r.HandleFunc("/", getRequest).Methods(http.MethodGet)
+	a.Router.HandleFunc("/", getRequest).Methods(http.MethodGet)
 	// curl -i -X POST http://localhost:3030
-	r.HandleFunc("/", postRequest).Methods(http.MethodPost)
+	a.Router.HandleFunc("/", postRequest).Methods(http.MethodPost)
 	// curl -i -X PUT http://localhost:3030
-	r.HandleFunc("/", putRequest).Methods(http.MethodPut)
+	a.Router.HandleFunc("/", putRequest).Methods(http.MethodPut)
 	// curl -i -X PATCH http://localhost:3030
-	r.HandleFunc("/", patchRequest).Methods(http.MethodPatch)
+	a.Router.HandleFunc("/", patchRequest).Methods(http.MethodPatch)
 	// curl -i -X DELETE http://localhost:3030
-	r.HandleFunc("/", deleteRequest).Methods(http.MethodDelete)
+	a.Router.HandleFunc("/", deleteRequest).Methods(http.MethodDelete)
 	// This is how one end point react differently to different APIs method
-	http.Handle("/", r)
+	http.Handle("/", a.Router)
+}
 
+func (a *App) Run() {
 	fmt.Println("Server started and listening on port", a.Port)
-	log.Fatal(http.ListenAndServe(a.Port, nil))
+	log.Fatal(http.ListenAndServe(a.Port, a.Router))
 }
