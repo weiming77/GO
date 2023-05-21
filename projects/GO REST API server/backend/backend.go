@@ -2,9 +2,11 @@ package backend
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"strconv"
 
 	//use gorila mux when response differently based on API method call
 	"github.com/gorilla/mux"
@@ -75,6 +77,56 @@ func deleteRequest(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, "This is a DELETE")
 }
 
+// Helper function with Messaage
+func responseWithJSON(w http.ResponseWriter, code int, payload interface{}) {
+	response, _ := json.Marshal(payload)
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(code)
+	w.Write(response)
+}
+
+// helper function with Error
+func responseWithError(w http.ResponseWriter, code int, message string) {
+	responseWithJSON(w, code, map[string]string{"error": message})
+}
+
+// This is GET handle - get all the products
+func (a *App) getAllProducts(w http.ResponseWriter, r *http.Request) {
+	products, err := getProducts(a.DB)
+	if err != nil {
+		fmt.Println("getProducts error: %s\n", err.Error())
+		responseWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	responseWithJSON(w, http.StatusOK, products)
+}
+
+// this is GET handle - get a product by ID
+func (a *App) fetchProduct(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	if id == "" {
+		fmt.Println("getProduct error: ID:%s\n", id)
+		responseWithError(w, http.StatusInternalServerError, fmt.Errorf("Expecting product id but value %s detected!\n", id).Error())
+		return
+	}
+
+	var p product
+	p.ID, _ = strconv.Atoi(id)
+	err := p.getProduct(a.DB)
+
+	if err != nil {
+		fmt.Println("getProduct error: %s\n", err.Error())
+		responseWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	responseWithJSON(w, http.StatusOK, p)
+}
+
 func (a *App) InitializeRouters() {
 
 	// APPSERVER is returning "hello world" when request match the end point in regardless of different REST methods
@@ -89,6 +141,8 @@ func (a *App) InitializeRouters() {
 	a.Router.HandleFunc("/", patchRequest).Methods(http.MethodPatch)
 	// curl -i -X DELETE http://localhost:3030
 	a.Router.HandleFunc("/", deleteRequest).Methods(http.MethodDelete)
+	a.Router.HandleFunc("/products", a.getAllProducts).Methods(http.MethodGet)
+	a.Router.HandleFunc("/products/{id}", a.fetchProduct).Methods(http.MethodGet)
 	// This is how one end point react differently to different APIs method
 	http.Handle("/", a.Router)
 }
