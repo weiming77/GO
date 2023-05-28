@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
@@ -37,7 +38,6 @@ func (a *App) Initialize() {
 	// use router so http server response according to the APIs method used.
 	a.Router = mux.NewRouter()
 	a.InitializeRouters()
-
 }
 
 type Movie struct {
@@ -127,6 +127,51 @@ func (a *App) fetchProduct(w http.ResponseWriter, r *http.Request) {
 	responseWithJSON(w, http.StatusOK, p)
 }
 
+func (a *App) newProduct(w http.ResponseWriter, r *http.Request) {
+	reqBody, _ := ioutil.ReadAll(r.Body)
+
+	var p product
+
+	fmt.Printf("newProduct read error: %q\n", reqBody)
+	if err := json.Unmarshal(reqBody, &p); err != nil {
+		fmt.Println("newProduct read error: %s\n", err.Error())
+		responseWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	if err := p.createProduct(a.DB); err != nil {
+		fmt.Println("newProduct error: %s\n", err.Error())
+		responseWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	responseWithJSON(w, http.StatusOK, p)
+}
+
+func (a *App) deleteProduct(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+
+	id := vars["id"]
+	if id == "" {
+		fmt.Println("deleteProduct error: ID:%s\n", id)
+		responseWithError(w, http.StatusInternalServerError, fmt.Errorf("Expecting product id but value %s detected!\n", id).Error())
+		return
+	}
+
+	var p product
+	p.ID, _ = strconv.Atoi(id)
+	err := p.deleteProduct(a.DB)
+
+	if err != nil {
+		fmt.Println("deleteProduct error: %s\n", err.Error())
+		responseWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	responseWithJSON(w, http.StatusOK, p)
+}
+
+// This is a POST handle - create new product
 func (a *App) InitializeRouters() {
 
 	// APPSERVER is returning "hello world" when request match the end point in regardless of different REST methods
@@ -141,10 +186,16 @@ func (a *App) InitializeRouters() {
 	a.Router.HandleFunc("/", patchRequest).Methods(http.MethodPatch)
 	// curl -i -X DELETE http://localhost:3030
 	a.Router.HandleFunc("/", deleteRequest).Methods(http.MethodDelete)
+	// curl -i -X GET localhost:3030/products
 	a.Router.HandleFunc("/products", a.getAllProducts).Methods(http.MethodGet)
+	// curl -i -X GET localhost:3030/products/5
 	a.Router.HandleFunc("/products/{id}", a.fetchProduct).Methods(http.MethodGet)
+	// curl -i -X POST localhost:3030/products -H "Content-Type: application/json" -d "{\"ProductCode\":\"PRTN\",\"Name\":\"Proton\",\"Inventory\":50,\"Price\":49.55,\"Status\":\"A\"}"
+	a.Router.HandleFunc("/products", a.newProduct).Methods(http.MethodPost)
+	// curl -i -X DELETE localhost:3030/products/5
+	a.Router.HandleFunc("/products/{id}", a.deleteProduct).Methods(http.MethodDelete)
 	// This is how one end point react differently to different APIs method
-	http.Handle("/", a.Router)
+	// http.Handle("/", a.Router)
 }
 
 func (a *App) Run() {
