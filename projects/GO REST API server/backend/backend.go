@@ -83,7 +83,7 @@ func responseWithJSON(w http.ResponseWriter, code int, payload interface{}) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(code)
-	w.Write(response)
+	w.Write([]byte(response))
 }
 
 // helper function with Error
@@ -171,6 +171,82 @@ func (a *App) deleteProduct(w http.ResponseWriter, r *http.Request) {
 	responseWithJSON(w, http.StatusOK, p)
 }
 
+func (a *App) allOrders(w http.ResponseWriter, r *http.Request) {
+	orders, err := getOrders(a.DB)
+	if err != nil {
+		fmt.Printf("allOrders error: %s\n", err.Error())
+		responseWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	responseWithJSON(w, http.StatusOK, orders)
+}
+
+func (a *App) fetchOrder(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	var o order
+	o.ID, _ = strconv.Atoi(id)
+	err := o.getOrder(a.DB)
+	if err != nil {
+		fmt.Printf("getOrder error: %s\n", err.Error())
+		responseWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	responseWithJSON(w, http.StatusOK, o)
+}
+
+func (a *App) newOrder(w http.ResponseWriter, r *http.Request) {
+	reqBody, _ := ioutil.ReadAll(r.Body)
+
+	var o order
+	json.Unmarshal(reqBody, &o)
+
+	err := o.createOrder(a.DB)
+	if err != nil {
+		fmt.Printf("newOrder error: %s\n", err.Error())
+		responseWithError(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	for _, item := range o.Items {
+		var oi orderItem
+		oi = item
+		oi.OrderID = o.ID
+		err := oi.createOrderItem(a.DB)
+		if err != nil {
+			fmt.Printf("newOrder, newOrderItem error: %s\n", err.Error())
+			responseWithError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+
+		responseWithJSON(w, http.StatusOK, o)
+	}
+}
+
+func (a *App) newOrderItems(w http.ResponseWriter, r *http.Request) {
+	reqBody, _ := ioutil.ReadAll(r.Body)
+	var ois []orderItem
+	json.Unmarshal(reqBody, &ois)
+	//fmt.Printf("newOrderItems %s", []byte(reqBody))
+
+	for _, item := range ois {
+		var oi orderItem
+		oi = item
+		//fmt.Printf("newOrderItem %d %d", oi.OrderID, oi.ProductID)
+		err := oi.createOrderItem(a.DB)
+		if err != nil {
+			fmt.Printf("newOrderItem error: %s\n", err.Error())
+			responseWithError(w, http.StatusInternalServerError, err.Error())
+			return
+		}
+	}
+
+	responseWithJSON(w, http.StatusOK, ois)
+}
+
 // This is a POST handle - create new product
 func (a *App) InitializeRouters() {
 
@@ -188,12 +264,23 @@ func (a *App) InitializeRouters() {
 	a.Router.HandleFunc("/", deleteRequest).Methods(http.MethodDelete)
 	// curl -i -X GET localhost:3030/products
 	a.Router.HandleFunc("/products", a.getAllProducts).Methods(http.MethodGet)
-	// curl -i -X GET localhost:3030/products/5
-	a.Router.HandleFunc("/products/{id}", a.fetchProduct).Methods(http.MethodGet)
+	// curl -i -X GET localhost:3030/product/5
+	a.Router.HandleFunc("/product/{id}", a.fetchProduct).Methods(http.MethodGet)
 	// curl -i -X POST localhost:3030/products -H "Content-Type: application/json" -d "{\"ProductCode\":\"PRTN\",\"Name\":\"Proton\",\"Inventory\":50,\"Price\":49.55,\"Status\":\"A\"}"
 	a.Router.HandleFunc("/products", a.newProduct).Methods(http.MethodPost)
-	// curl -i -X DELETE localhost:3030/products/5
-	a.Router.HandleFunc("/products/{id}", a.deleteProduct).Methods(http.MethodDelete)
+	// curl -i -X DELETE localhost:3030/product/5
+	a.Router.HandleFunc("/product/{id}", a.deleteProduct).Methods(http.MethodDelete)
+	// curl -i -X GET localhost:3030/orders
+	a.Router.HandleFunc("/orders", a.allOrders).Methods(http.MethodGet)
+	// curl -i -X GET localhost:3030/order/6
+	a.Router.HandleFunc("/order/{id}", a.fetchOrder).Methods(http.MethodGet)
+	// curl -X POST localhost:3030/orders -H "Content-Type: application/json" -d "{\"customerName\": \"Daisy Duck\", \"total\": 30, \"status\": \"Shipped\", \"items\": [{\"product_id\": 2, \"quantity\": 1}, {\"product_id\": 3, \"quantity\": 3}]}"
+	a.Router.HandleFunc("/orders", a.newOrder).Methods(http.MethodPost)
+	// curl -X POST localhost:3030/orders -H "Content-Type: application/json" -d "{\"customerName\": \"Daisy Duck\", \"total\": 30, \"status\": \"Shipped\", \"items\": []}"
+	// curl -X POST localhost:3030/orderitems -H "Content-Type: application/json" -d "[{\"order_id\": 3, \"product_id\": 2, \"quantity\": 1}, {\"order_id\": 3, \"product_id\": 3, \"quantity\": 3}]"
+	a.Router.HandleFunc("/orderitems", a.newOrderItems).Methods(http.MethodPost)
+
+	//
 	// This is how one end point react differently to different APIs method
 	// http.Handle("/", a.Router)
 }

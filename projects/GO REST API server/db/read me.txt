@@ -1,0 +1,24 @@
+curl localhost:3030/orders
+
+curl -X POST localhost:3030/orders -H "Content-Type: application/json" -d "{\"customerName\": \"Daisy Duck\", \"total\": 30, \"status\": \"Shipped\", \"items\": [{\"product_id\": 2, \"quantity\": 1}, {\"product_id\": 3, \"quantity\": 3}]}"
+
+curl -X POST localhost:3030/orders -H "Content-Type: application/json" -d "{\"customerName\": \"Daisy Duck\", \"total\": 30, \"status\": \"Shipped\", \"items\": []}"
+
+curl -X POST localhost:3030/orderitems -H "Content-Type: application/json" -d "[{\"order_id\": 3, \"product_id\": 2, \"quantity\": 1}, {\"order_id\": 3, \"product_id\": 3, \"quantity\": 3}]"
+
+
+Create Table orders (
+ id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+ customerName VARCHAR(256) NOT NULL,
+ total DOUBLE NOT NULL,
+ status VARCHAR(64) NOT NULL
+);
+
+Create Table order_items (
+ order_id INT,
+ product_id INT,
+ quantity DOUBLE NOT NULL,
+ FOREIGN KEY (order_id) REFERENCES orders (id),
+ FOREIGN KEY (product_id) REFERENCES products (id),
+ PRIMARY KEY (order_id, product_id)
+);
