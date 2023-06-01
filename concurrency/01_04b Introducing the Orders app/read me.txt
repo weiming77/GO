@@ -1,0 +1,187 @@
+* The server is the entry point of the application, using the net/http package to listen for incoming requests.
+
+* The server uses handlers to map the HTTP request and responses to internal models.
+
+* The handlers then call out to the repo for internal functionality.
+
+* The repo makes any needed updates to the internal models and then sends them down to the database layer. It relies on the DB Package for storing the orders/transactions and updating the products in the in-memory database, which is a GO Map for simplicity.
+
+Race condition
+- Race conditions occur when multiple goroutines read and write shared data without synchronisation mechanisms. ie fatal error: concurrent map writes.
+- As we already know Goroutine scheduling is non-deterministic, we don't know the order in which the goroutines will attempt to read and write to the shared data.
+- Therefore the resukt of the change is inconsistent and can cause difficult to detect bugs.
+- Problems often occur with a check-then-act operations
+- The Go toolchain has a build-in race detector, by add the -race flag to any go command to use it. ie go run -race server.go to detect where the race condition is happened.
+
+The sync.Map (and sync.Mutex)
+- The standard Map is not safe for concurrent access, here come the sync.Map is SAFE for concurrent use by multiple Goroutines. 
+- Its operations do not need any additional locks for use.
+- Equivalent to a safe map[interface{}]interface{}, note that both its key and value types are interface, and will need to be cast to any types that we need to use.
+- The zero value is empty and ready for use. We should avoid copying it after initialization.
+- Due to its extra use of locks and safety mechanism, it incurs performance overhead and should only be used neccessary.
+- The sync.Map is intuitive to use, the methods we will be using are 
+i. The load method: func (m *Map) Load(key interface{}) (value interface{} ok bool) which reads an exisitng item from the Map.
+ii. The store method: func (m *Map) Store(key interface{}) (key, value interface{}) which inserts or updates a new key value pairs.
+iii. The ranges method: func (m *Map) Range(f func(key, value interface{})) bool takes a functon and sequentially calls it for all the values in the map.
+
+The sync.Mutex
+* No race conditions are detected, but is order processing correct? The goroutine scheduling is the key.
+* Find project, check stock, add order and reduce stock is check and act mechanism, the stock could be outdated in the meantime.
+* The sync.Mutex lock down the repo using locks. Only the goroutine which has acquired the lock is able to do its work.
+* the first goroutine successful in locking the repo will be the one able to complete the first. All other goroutines are vlocked waiting for the lock to be unlocked again. The lock will bring order to the interleaving operations that have been causing the test failures.
+* The sync package is able to help us again
+The Mutex is initialised unlocked using var m sync.Mutex
+func (m *Mutex) Lock()
+func (m *Mutex) Unlock()
+* In general, the Mutex should cover the section of the code that is reading and writing to the shared resource we want to protect, use mutex to protect the shared resource, this section that need to be protected is known as Critical Section. It should be executed atomically, which means without interruption or context switch.
+PS: Critical session is the group of instructions that read and write to the shared resources which need to be executed atomically without interruption.
+
+Channels
+- Channels are a concurrency synchronization mechanism that is unique to GO
+- We can view channels as internal FIFO, use Channel to share info among goroutines instead of return the value to main thread context. A Channel act as a passthru.
+ Sender Goroutine - value -> Channel - value -> Receiver Goroutine
+- Channels are first-class citizens in GO, so they are be used without importing any extra packages.
+The reserved keyword "chan" denotes a channel
+The channel operator is the arrow operator <-
+Channels are associated with a data type, and only the declare data type can be transported on them.
+The zero value of channels- var ch chan T - is nil
+- Like Map and Slices, channels must be initialized using the make syntax.
+The syntax to declare a channel of type T is ch := make(chan T)
+- Given the channel denoted by the variable ch.
+- Sending and receiving are the two operations:
+Sending is done with ch <- data; the arrow points into the channel as the data travels into it.
+Receiving is done with data := <-ch; the narrow points away from the channel as data travels out of it
+- Both the Sends and Receives are blocking, which means code execution will STOP until the send or receive is successfuly completed. The definition of completion depends on the setuo of the channel.
+- Unbuffered channel does not has the capacity to hold the values. Zero capacity channels which required both sender and receiver to be present to successfully complete operatons.
+- Unbuffered channels exchange information synchronously. By default channels are unbuffered and this is their behavior.
+* A second type of channels are buffered channels. Predefined capacity channels which have the ability to store values for later processing. It has the predefined buffer to hold a predefined amount of values.
+* If a space in the underlying values array is available, the sender goroutine can send its value to the channel and complete its send operation immediately. The channel then saves the value in the underlying values arrays and ready for future processing.
+* When a receiver goroutine arrives at the channel, the channel can immediately forward the existing value from the array. The value travels back through the channel and it removed from the underlying array. The receiver then completes its operation once it has reeived its value.
+* Because of the sender and receiver complete their operations at different times, buffered channels are said to support asynchronous communication.
+* The ability to support both synchronous and asynchronous operations make channels a versatile and powerful synchronizaton tool.
+
+Channel directions
+- Channels also have directions when declared simply as chan
+* Bidirection channel: chan T
+* Send only channel: chan<- T
+* receive only channel: <-chan T
+* Allowed operations are enforced by the compilor
+* Bidirectional channels are implicitly cast to unidirectional channels
+
+Closing channels
+- Closing a channel signals to other Goroutines no more values will be sent on it
+- The syntax is simple; we close a channel ch using close(ch)
+- we can close bidirectional and send only channels, not receive only channels
+- Receivers immediately receive the zero value of the channel data type from a closed channel
+- Senders panic when sending to a closed channel.
+- Channels also provide an optional return value, OK flag
+func doWork(ch chan string){
+ data, ok := -ch
+ if !ok {
+  fmt.Println("Channel is closed!")
+  return
+ }
+ fmt.Println("Channel is open:", data)
+
+Ranging over Channels
+* Range over multiple data send to buffered channel, and expecting receiver read all values from buffered value array in buffered channel.
+* If channel is not closed after values passed to the array value buffer, system will be experiencing fatal error: all goroutines are asleep - deadlock. The reason is the main goroutine has no idea when the sub Goroutine has finished its work and does not know when to exit from its loop. (It then ends up blocked on the receive operation on line21 as the stack also indicates, waiting for more values).
+* It is always good to close the channel to indicate the receivers that no more messages will be sent.
+* If receiver skip the channel's close status (OK flag), it will continue to read the value from channel infinity. Do this: 
+data, ok := <-ch
+if !ok {
+  return // exit and stop expecting value from a closed channel
+}
+
+* Like basic data structures, channels also support the FOR RANGE operator to iterate over the values received from a channel. 
+* The range automatically exits once the channel is closed. Do this:
+func doWork(ch chan string) {
+  for data := range ch {
+    fmt.Println("Channel is open:", data)
+  }
+  fmt.Println("Channel is closed:")
+}
+
+The Select Statement
+* One of the final bits of knowledge we need when working with channels and GOroutines is the Select Statement.
+* The Select statement let's a goroutine wait on multiple channel operations. They can be both send and receive operations.
+* The select blocks until one of its operations on its channels is ready, then it execute that operation.
+* If multiple operations are ready at the same time, one of them is chosen at random
+
+
+Improvement using channels instead of Locks
+* we can use a channel to communicate which orders need to be processed.
+* Orders will arrive in the order that they have been placed, (and the operations will block in a similar way to what we saw in the new text).
+* Channels will then provide an inbuilt way of passing information that is more intuitive to use.
+* As Channels use locks under the hood we have successfully used them to synchronize the orders requests.
+
+Channels' Signal 
+* we should able to create POST/close which allow us to stop taking orders without shutting down the server.
+* We should gracefully close off the Orders app, which we can loosely define using these four characteristics:
+- Stop receiving new orders.
+- Complete all existing orders.
+- Allow users to use all other functionalities without panic or error.
+- Provide good error messages on order attempts.
+- The graceful way of close a channel is to instead close an additional channel known as a signal channel.
+- The purpose of this channel is not to transport information but to signal that work has completed. Its data type is the empty struct to take up as little memory as possible. see below done channel is the signal channel.
+
+func doWork(input <-chan string, done <-chan struct{}) {
+  for {
+    select {
+    case in := <-input:
+      fmt.Printin("Got some input:", in)
+    case <-done:
+      return
+    }
+  }
+}
+PS: Once the done channel closed, the doWork function terminates.
+
+* As we remember from the behavior of channels, attempting to close an already closed channel will panic. 
+* while the done channel stops panic on sends on the input channel, We should NEED to ensure that the signal channel is only closed once. 
+* The sync package provides sync.Once to help. see below
+
+func sayHelloOnce() {
+  var once sync.Once
+  for i := 0; i< 10; i++ {
+    once.Do(func() {
+      fmt.Println("Hello, world!")
+    })
+  }
+}
+
+WorkerPools
+- A predetermined amount of workers start up
+- All workers listen for input on a shared channel.
+- The shared channel is buffered
+- The same set of workers pick up multiple pieces of works.
+
+Contexts and cancellation
+* A context.Context is generated by net/http package for each request.
+* we can access the context of each request using its context method. ie ctx := req.Context().
+* Contexts are immutable, meaning that if we want to make any changes, a new context will be generated, which we then need to interact with.
+* Once a new context is made from another context, the first context is the parent, and the second context is the derived context.
+* There are three ways to cancel a context, with a cancel function. Cancellation allows the system to stop doing unnecesary work.
+* The context exposes three ways that a request can be cancelled:
+- context.WithCancel
+- context.WithDeadline
+- context.WithTimeout
+PS The deadline and timeout are the same in that they specify a time after which the context will be automatically canceled. Once a context is canceled, all derived contexts are also canceled.
+* Listen for cancellation on <-ctx.Done
+* The syntax for using context cancellaton is simple:
+func doWork(ctx context.Context, input <-chan string) {
+  for {
+    select {
+    case in := <-input:
+      fmt.Println("Got some input:", in)
+    case <-ctx.Done():
+      fmt.Println("Out of time!", ctx.Err())
+      return
+    }
+  }
+}
+* we are using concurrent processes in server without context and without any issues, why bother adding it to the application at all? There are a few advantages that the context gives us for free:
+- Pass request IDs from handlers further into the application. This is very useful or request tracing and debugging.
+- Stop expensive operations from running unnessary. The context allows HTTP application to terminate long running requests and slow processes. 
+- Due to the propagated cancellation of derived contexts, we have an inbuilt way to cancel operations across the application witout any extra effort.
+- Finally context help keep system latency down using an inbuildt hard stop. No operation is allowed to run forever after all.
