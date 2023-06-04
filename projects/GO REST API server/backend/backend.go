@@ -95,7 +95,7 @@ func responseWithError(w http.ResponseWriter, code int, message string) {
 func (a *App) getAllProducts(w http.ResponseWriter, r *http.Request) {
 	products, err := getProducts(a.DB)
 	if err != nil {
-		fmt.Println("getProducts error: %s\n", err.Error())
+		fmt.Printf("getProducts error: %s\n", err.Error())
 		responseWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -109,7 +109,7 @@ func (a *App) fetchProduct(w http.ResponseWriter, r *http.Request) {
 	id := vars["id"]
 
 	if id == "" {
-		fmt.Println("getProduct error: ID:%s\n", id)
+		fmt.Printf("getProduct error: ID:%s\n", id)
 		responseWithError(w, http.StatusInternalServerError, fmt.Errorf("Expecting product id but value %s detected!\n", id).Error())
 		return
 	}
@@ -119,7 +119,7 @@ func (a *App) fetchProduct(w http.ResponseWriter, r *http.Request) {
 	err := p.getProduct(a.DB)
 
 	if err != nil {
-		fmt.Println("getProduct error: %s\n", err.Error())
+		fmt.Printf("getProduct error: %s\n", err.Error())
 		responseWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -134,13 +134,13 @@ func (a *App) newProduct(w http.ResponseWriter, r *http.Request) {
 
 	fmt.Printf("newProduct read error: %q\n", reqBody)
 	if err := json.Unmarshal(reqBody, &p); err != nil {
-		fmt.Println("newProduct read error: %s\n", err.Error())
+		fmt.Printf("newProduct read error: %s\n", err.Error())
 		responseWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 
 	if err := p.createProduct(a.DB); err != nil {
-		fmt.Println("newProduct error: %s\n", err.Error())
+		fmt.Printf("newProduct error: %s\n", err.Error())
 		responseWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -153,7 +153,7 @@ func (a *App) deleteProduct(w http.ResponseWriter, r *http.Request) {
 
 	id := vars["id"]
 	if id == "" {
-		fmt.Println("deleteProduct error: ID:%s\n", id)
+		fmt.Printf("deleteProduct error: ID:%s\n", id)
 		responseWithError(w, http.StatusInternalServerError, fmt.Errorf("Expecting product id but value %s detected!\n", id).Error())
 		return
 	}
@@ -163,7 +163,7 @@ func (a *App) deleteProduct(w http.ResponseWriter, r *http.Request) {
 	err := p.deleteProduct(a.DB)
 
 	if err != nil {
-		fmt.Println("deleteProduct error: %s\n", err.Error())
+		fmt.Printf("deleteProduct error: %s\n", err.Error())
 		responseWithError(w, http.StatusInternalServerError, err.Error())
 		return
 	}
