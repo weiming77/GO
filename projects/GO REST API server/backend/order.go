@@ -47,8 +47,13 @@ func getOrders(db *sql.DB) ([]order, error) {
 }
 
 func (o *order) getOrder(db *sql.DB) error {
-	db.QueryRow("select customerName, total, status from orders where id = ?", o.ID).Scan(&o.CustomerName, &o.Total, &o.Status)
-	err := o.getOrderItems(db)
+	var err error
+	err = db.QueryRow("select customerName, total, status from orders where id = ?", o.ID).Scan(&o.CustomerName, &o.Total, &o.Status)
+	if err != nil {
+		return err
+	}
+
+	err = o.getOrderItems(db)
 	if err != nil {
 		return err
 	}

@@ -186,6 +186,12 @@ func (a *App) fetchOrder(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	id := vars["id"]
 
+	if id == "" {
+		fmt.Printf("getOrder error: ID:%s\n", id)
+		responseWithError(w, http.StatusInternalServerError, fmt.Errorf("Expecting order id but value %s detected!\n", id).Error())
+		return
+	}
+
 	var o order
 	o.ID, _ = strconv.Atoi(id)
 	err := o.getOrder(a.DB)
@@ -221,9 +227,8 @@ func (a *App) newOrder(w http.ResponseWriter, r *http.Request) {
 			responseWithError(w, http.StatusInternalServerError, err.Error())
 			return
 		}
-
-		responseWithJSON(w, http.StatusOK, o)
 	}
+	responseWithJSON(w, http.StatusOK, o)
 }
 
 func (a *App) newOrderItems(w http.ResponseWriter, r *http.Request) {
