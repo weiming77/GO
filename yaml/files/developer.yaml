@@ -1,0 +1,16 @@
+id: "0126517407"
+sector: 3
+salary: 90000
+tasks:
+- feature/task123
+- feature/314
+- feature/567
+dailyHours:
+- 7
+- 9
+- 6
+- 8
+- 7
+languages:
+  Golang: 9.1
+  Python: 7.9
