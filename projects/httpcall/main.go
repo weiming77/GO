@@ -40,7 +40,7 @@ func postMetric(m Metric) error {
 	}
 
 	// we set the headers of the content type
-	req.Header.Set("Content-Type", "application/jsom")
+	req.Header.Set("Content-Type", "application/json")
 
 	// now we call the service
 	resp, err := http.DefaultClient.Do(req)
