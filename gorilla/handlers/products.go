@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"context"
+	"fmt"
 	"gorilla/data"
 	"log"
 	"net/http"
@@ -146,6 +147,15 @@ func (p *Products) MidlewareProductValidationProduct(next http.Handler) http.Han
 		if err != nil {
 			p.l.Println("[Error] deserializing product", err)
 			http.Error(rw, "Unable to unmarshal JSON", http.StatusBadRequest)
+			return
+		}
+
+		// validate the product by sanitize the inputs
+		// curl -X POST localhost:9090 -d "{\"name\":\"\", \"description\":\"free sample\", \"price\":0.00, \"sku\":\"Na\"}"
+		err = prod.Validate()
+		if err != nil {
+			p.l.Println("[Error] validating product", err)
+			http.Error(rw, fmt.Sprintf("Error validating product: %s\n", err), http.StatusBadRequest)
 			return
 		}
 
