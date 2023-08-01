@@ -1,0 +1,99 @@
+{
+  "tables": [
+    {
+      "table": "POSCustomers",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\POSNL.POSCustomers.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\POSNL.POSCustomers.Data.sql"
+    },
+    {
+      "table": "POSJournalAuditTrail",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\POSNL.POSJournalAuditTrail.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\POSNL.POSJournalAuditTrail.Data.sql"
+    },
+    {
+      "table": "POSJournalMisc",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\POSNL.POSJournalMisc.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\POSNL.POSJournalMisc.Data.sql"
+    },
+    {
+      "table": "POSJournalTender",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\POSNL.POSJournalTender.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\POSNLPOSJournalTender.Data.sql"
+    },
+    {
+      "table": "POSJournalTrans",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\POSNL.POSJournalTrans.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\POSNL.POSJournalTrans.Data.sql"
+    },
+    {
+      "table": "APPAuditTrail",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.APPAuditTrail.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.APPAuditTrail.Data.sql"
+    },
+    {
+      "table": "APPAuditTrailFilters",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.APPAuditTrailFilters.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.APPAuditTrailFilters.Data.sql"
+    },
+    {
+      "table": "APPAuditTransTypes",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.APPAuditTransTypes.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.APPAuditTransTypes.Data.sql"
+    },
+    {
+      "table": "BOFuelPumps",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.BOFuelPumps.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.BOFuelPumps.Data.sql"
+    },
+    {
+      "table": "BOMisc",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.BOMisc.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.BOMisc.Data.sql"
+    },
+    {
+      "table": "BOSaleMisc",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.BOSaleMisc.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.BOSaleMisc.Data.sql"
+    },
+    {
+      "table": "BOSaleTable",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.BOSaleTable.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.BOSaleTable.Data.sql"
+    },
+    {
+      "table": "BOSaleTender",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.BOSaleTender.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.BOSaleTender.Data.sql"
+    },
+    {
+      "table": "BOSaleTrans",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.BOSaleTrans.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.BOSaleTrans.Data.sql"
+    },
+    {
+      "table": "BOStoreInfo",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.BOStoreInfo.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.BOStoreInfo.Data.sql"
+    },
+    {
+      "table": "PCAuditTrail",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.PCAuditTrail.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.PCAuditTrail.Data.sql"
+    },
+    {
+      "table": "POSCashier",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.POSCashier.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.POSCashier.Data.sql"
+    },
+    {
+      "table": "POSFunctions",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.POSFunctions.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.POSFunctions.Data.sql"
+    },
+    {
+      "table": "POSMisc",
+      "schema": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.POSMisc.sql",
+      "data": "C:\\Workspace\\Python\\CDC\\sample\\SAGAPOS.POSMisc.Data.sql"
+    }
+  ]
+}
