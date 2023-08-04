@@ -2,24 +2,35 @@ package main
 
 import (
 	"fmt"
+	"sync"
 	"time"
 )
 
 func main() {
+	now := time.Now()
 	ch := make(chan int, 2)     // channel with buff, sender can drop the value and leave without waiting for receiver receive the value in channel
 	exit := make(chan struct{}) // channel without buff, system will block sender from leaving until receiver receive the value in channel
 
 	go func() {
 		defer close(ch)
+
+		wg := sync.WaitGroup{}
+
 		for i := 0; i < 10; i++ {
+			wg.Add(1)
 			fmt.Println(time.Now(), i, "sending...")
-			ch <- i
+			go func(v int) int {
+				defer wg.Done()
+				ch <- v
+				// pretend as an busy go-routine
+				time.Sleep(1 * time.Second)
+				return v
+			}(i)
 			fmt.Println(time.Now(), i, "sent!")
 
-			time.Sleep(1 * time.Second)
 		}
-
-		fmt.Println(time.Now(), "all completed, leaving goroutine")
+		wg.Wait()
+		fmt.Printf("%v all completed in %v, leaving goroutine\n\n", time.Now(), time.Since(now))
 	}()
 
 	go func() {
