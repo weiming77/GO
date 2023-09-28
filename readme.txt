@@ -286,3 +286,26 @@ Golang Package Structure
 	|
 	|---/main
 		|__ main.go { main function, router setup, server kickoff }
+
+
+Golang files structure 
+
+/%Gopath%
+	|---src/
+	       |---github.com/
+			     |---userProfile/
+					    |---project root/
+							    |---module/package
+
+Cross Compiling
+- Compile the artifact from one OS/Architecture to another OS/Architecture
+- ie from Mac/Arm to RasperryPi/Arm. see below
+$ env GOOS=linux GOARCH=arm GOARM=5 build
+
+Tips:
+To find this list of possible platforms, run the following:
+$ go tool dist list
+
+To find out what combination your platform is, you can use the go env command and pass GOOS and GOARCH as arguments:
+go env GOOS GOARCH
+
