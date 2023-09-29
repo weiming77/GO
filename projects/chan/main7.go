@@ -3,17 +3,19 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"sync/atomic"
 	"time"
 )
 
 var (
-	iTimer       int = 0
-	iTotal       int = 0
-	iAccumulated int = 0
+	iTimer       int32 = 0
+	iTotal       int   = 0
+	iAccumulated int   = 0
 )
 
-func Countdown(i int) {
-	iTimer += i
+func Countdown(i int32) {
+	atomic.AddInt32(&iTimer, i)
+	//iTimer += i
 }
 
 func main() {
@@ -34,9 +36,14 @@ func main() {
 		}(i + 1)
 	}
 
-	for {
+	var bNoMore bool
+	for !bNoMore {
 		select {
-		case iTask := <-ch:
+		case iTask, ok := <-ch:
+			if !ok {
+				bNoMore = true
+				break
+			}
 			iTotal += 1
 			Countdown(-1)
 			fmt.Printf("Task %d is completed.\n", iTask)
@@ -45,9 +52,8 @@ func main() {
 			Countdown(1)
 		default:
 			if iTotal > 0 && iTimer == 0 {
-				fmt.Printf("Total %d tasks with total processing %d secs completed in %v, leaving sender goroutine\n", iTotal, iAccumulated, time.Since(now))
+				fmt.Printf("Total %d tasks with total processing %d secs completed in %v.\n", iTotal, iAccumulated, time.Since(now))
 				close(ch)
-				return
 			}
 		}
 	}
