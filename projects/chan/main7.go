@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"math/rand"
+	"runtime"
 	"sync/atomic"
 	"time"
 )
@@ -20,16 +21,16 @@ func Countdown(i int32) {
 
 func main() {
 	now := time.Now()
-	ch := make(chan int, 5) // channel with buff, sender can drop the value and leave without waiting for receiver receive the value in channel
-	done := make(chan int)  // channel without buff, system will block sender from leaving until receiver receive the value in channel
+	ch := make(chan int, runtime.NumCPU()) // channel with buff, sender can drop the value and leave without waiting for receiver receive the value in channel
+	done := make(chan int)                 // channel without buff, system will block sender from leaving until receiver receive the value in channel
 	//done := make(chan struct{}) // channel without buff, system will block sender from leaving until receiver receive the value in channel
 
-	for i := 0; i < 50; i++ {
+	for i := 0; i < 100000; i++ {
 		go func(v int) {
 			// pretend as an busy go-routine
 			iSec := rand.Intn(5) + 1
 			time.Sleep(time.Duration(iSec) * time.Nanosecond) //
-			fmt.Printf("Task %d will take %v secs for processing...\n", v, iSec)
+			fmt.Printf("Task %d took %v secs for processing...\n", v, iSec)
 			//done <- struct{}{}
 			done <- iSec
 			ch <- v
@@ -52,7 +53,7 @@ func main() {
 			Countdown(1)
 		default:
 			if iTotal > 0 && iTimer == 0 {
-				fmt.Printf("Total %d tasks with total processing %d secs completed in %v.\n", iTotal, iAccumulated, time.Since(now))
+				fmt.Printf("Total %d tasks with total accumulated %d secs are completed in %v.\n", iTotal, iAccumulated, time.Since(now))
 				close(ch)
 			}
 		}
