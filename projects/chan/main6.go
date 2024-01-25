@@ -6,41 +6,30 @@ import (
 )
 
 func main() {
-	evilNinjas := []string{"Tommy", "Jonny", "Bobby", "Andy"}
-	smokeSignal := make(chan string)
-	completed := make(chan bool)
+	evilNinjas := []string{"Tommy", "Jonny", "Bobby", "Andy", "Anord", "Matrix", "Pirates"}
+	noofkillers := 2 // limit only 2x killers in the worker pool
+	limiter := make(chan struct{}, noofkillers)
 	now := time.Now()
-	var iCount uint = 0
 
-	go func() {
-		for _, ninja := range evilNinjas {
-			go attack(ninja, smokeSignal)
-		}
+	for _, ninja := range evilNinjas {
+		limiter <- struct{}{} // Acquire a token. Waits here for token releases from the limiter.
+		go attack(ninja, limiter)
+	}
 
-		for {
-			select {
-			case deceased, ok := <-smokeSignal:
-				if !ok {
-					close(completed)
-					return
-				}
-				fmt.Println("evil ninja", deceased, "is down!")
-				iCount++
-			default:
-				if iCount == uint(len(evilNinjas)) {
-					close(smokeSignal)
-				}
-			}
-		}
-	}()
-
-	<-completed
+	// Wait for all goroutines to complete
+	for i := 0; i < cap(limiter); i++ {
+		limiter <- struct{}{}
+	}
 	fmt.Printf("Mission accomplished in %v", time.Since(now))
 
 }
 
-func attack(target string, deceased chan<- string) {
+func attack(target string, deceased <-chan struct{}) {
+	defer func(ninja string) {
+		<-deceased // Release the token
+		fmt.Printf("%s got killed\n", ninja)
+	}(target)
+
 	fmt.Println("Throwing ninja stars at", target)
 	time.Sleep(time.Second * 2)
-	deceased <- target
 }
