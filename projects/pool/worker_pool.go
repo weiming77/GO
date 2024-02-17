@@ -7,15 +7,34 @@ import (
 )
 
 // Task definition
-type Task struct {
-	ID int
+type Task interface {
+	Process()
 }
 
-// A way to process the Task
-func (t *Task) Process() {
-	fmt.Printf("Processing task %d\n", t.ID)
+// Email task defination
+type EmailTask struct {
+	Email       string
+	Subject     string
+	MessageBody string
+}
+
+// A way to process the Email Task
+func (t *EmailTask) Process() {
+	fmt.Printf("Sending email to %s\n", t.Email)
 	// Simulate a time consuming process
 	time.Sleep(2 * time.Second)
+}
+
+// Image task defination
+type ImageProcessingTask struct {
+	ImageUrl string
+}
+
+// A way to process Image Task
+func (t *ImageProcessingTask) Process() {
+	fmt.Printf("Processing image %s\n", t.ImageUrl)
+	// Simulate a time consuming process
+	time.Sleep(3 * time.Second)
 }
 
 // Define the worker pool
